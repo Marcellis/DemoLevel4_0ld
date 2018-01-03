@@ -1,6 +1,7 @@
 package com.example.marmm.demolevel4;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -22,11 +23,14 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
 
 
     //Local variables
-    public static List<Reminder> mReminders;
+    //public static List<Reminder> mReminders;
     private ReminderAdapter mAdapter;
     private RecyclerView mRecyclerView;
     private EditText mNewReminderText;
 
+    //Database related local variables
+    private Cursor mCursor;
+    private DataSource mDataSource;
 
     //Constants used when calling the update activity
     public static final String REMINDER_POSITION = "Position";
@@ -41,8 +45,9 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
 
 
         mNewReminderText = findViewById(R.id.editText_main);
-        mReminders = new ArrayList<>();
-
+      //  mReminders = new ArrayList<>();
+        mDataSource = new DataSource(this);
+        mDataSource.open();
 
         //Initialize the local variables
 
@@ -77,8 +82,8 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
 //Check if some text has been added
                 if (!(TextUtils.isEmpty(text))) {
                     //Add the text to the list (datamodel)
-                    mReminders.add(newReminder);
-
+                    //mReminders.add(newReminder);
+                    mDataSource.createReminder(text);
 //Tell the adapter that the data set has been modified: the screen will be refreshed.
                     updateUI();
 
@@ -111,7 +116,7 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
 
                         //Get the index corresponding to the selected position
                         int position = (viewHolder.getAdapterPosition());
-                        mReminders.remove(position);
+                 //       mReminders.remove(position);
                         mAdapter.notifyItemRemoved(position);
                     }
                 };
@@ -123,13 +128,15 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
     }
 
     private void updateUI() {
+        mCursor = mDataSource.getAllReminders();
         if (mAdapter == null) {
-            mAdapter = new ReminderAdapter(this, mReminders);
+            mAdapter = new ReminderAdapter (this,mCursor);
             mRecyclerView.setAdapter(mAdapter);
         } else {
-            mAdapter.notifyDataSetChanged();
+            mAdapter.swapCursor(mCursor);
         }
     }
+
 
 
     @Override
@@ -154,6 +161,7 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
         return super.onOptionsItemSelected(item);
     }
 
+/*
 
     @Override
     public void reminderOnLongClick(int i) {
@@ -169,10 +177,34 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
 
 
     }
+*/
 
-    @Override
+
     protected void onResume() {
         super.onResume();
+        mDataSource.open();
         updateUI();
     }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (mCursor != null && !mCursor.isClosed()) mCursor.close();
+        mDataSource.close();
+    }
+
+
+    @Override
+    public void reminderOnClick(long id) {
+        Intent intent = new Intent(MainActivity.this, UpdateActivity.class);
+        intent.putExtra(REMINDER_POSITION, id);
+        startActivity (intent);
+    }
+
+
+    @Override
+    public void reminderOnLongClick(long id) {
+        mDataSource.deleteReminder(id);
+        updateUI();
+    }
+
 }

@@ -1,6 +1,7 @@
 package com.example.marmm.demolevel4;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,18 +17,17 @@ import java.util.List;
 public class ReminderAdapter extends RecyclerView.Adapter<ReminderAdapter.ViewHolder> {
 
     final private ReminderClickListener mReminderClickListener;
-    private List<Reminder> mReminders;
 
+    private Cursor mCursor;
 
     public interface ReminderClickListener{
-        void reminderOnLongClick (int i);
-        void reminderOnClick (int i);
+        void reminderOnClick (long id);
+        void reminderOnLongClick (long id);
     }
 
-
-    public ReminderAdapter(ReminderClickListener mReminderClickListener, List<Reminder> mReminders) {
+    public ReminderAdapter(ReminderClickListener mReminderClickListener, Cursor mCursor) {
         this.mReminderClickListener = mReminderClickListener;
-        this.mReminders = mReminders;
+        this.mCursor = mCursor;
     }
 
     @Override
@@ -44,15 +44,21 @@ public class ReminderAdapter extends RecyclerView.Adapter<ReminderAdapter.ViewHo
 
     @Override
     public void onBindViewHolder(ReminderAdapter.ViewHolder holder, final int position) {
-        Reminder reminder =  mReminders.get(position);
-        holder.textView.setText(reminder.getmReminderText());
+
+        // Move the mCursor to the position of the item to be displayed
+        if (!mCursor.moveToPosition(position))
+            return; // bail if returned null
+        String name = mCursor.getString(mCursor.getColumnIndex(RemindersContract.ReminderEntry.COLUMN_NAME_REMINDER));
+
+        holder.textView.setText(name);
 
     }
 
     @Override
     public int getItemCount() {
-        return mReminders.size();
+        return (mCursor == null ? 0 : mCursor.getCount());
     }
+
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnLongClickListener, View.OnClickListener{
         public TextView textView;
@@ -67,17 +73,40 @@ public class ReminderAdapter extends RecyclerView.Adapter<ReminderAdapter.ViewHo
 
         @Override
         public boolean onLongClick(View view) {
-            int clickedPosition = getAdapterPosition();
-            mReminderClickListener.reminderOnLongClick(clickedPosition);
+
+
+
+            int clickedPosition =  getAdapterPosition();
+            if (!mCursor.moveToPosition(clickedPosition))
+                return false; // bail if returned null
+            // Update the view holder with the information needed to display
+            final long id =
+                    mCursor.getLong(mCursor.getColumnIndex(RemindersContract.ReminderEntry._ID));
+            mReminderClickListener.reminderOnLongClick(id);
             return true;
         }
 
         @Override
         public void onClick(View view) {
-            int clickedPosition = getAdapterPosition();
-            mReminderClickListener.reminderOnClick(clickedPosition);
+            int clickedPosition =  getAdapterPosition();
+            if (!mCursor.moveToPosition(clickedPosition))
+            return; // bail if returned null
+            // Update the view holder with the information needed to display
+            final long id =
+                    mCursor.getLong(mCursor.getColumnIndex(RemindersContract.ReminderEntry._ID));
+            mReminderClickListener.reminderOnClick(id);
         }
     }
 
+    public void swapCursor(Cursor newCursor) {
+
+        if (mCursor != null) mCursor.close();
+
+        mCursor = newCursor;
+        if (newCursor != null) {
+            // Force the RecyclerView to refresh
+            this.notifyDataSetChanged();
+        }
+    }
 
 }
