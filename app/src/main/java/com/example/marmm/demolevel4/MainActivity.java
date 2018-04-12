@@ -1,5 +1,6 @@
 package com.example.marmm.demolevel4;
 
+import android.arch.persistence.room.Room;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -29,8 +30,8 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
     private EditText mNewReminderText;
 
     //Database related local variables
-    private Cursor mCursor;
-    private DataSource mDataSource;
+
+    AppDatabase db;
 
     //Constants used when calling the update activity
     public static final String REMINDER_POSITION = "Position";
@@ -44,10 +45,11 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
         setSupportActionBar(toolbar);
 
 
+         db = Room.databaseBuilder(getApplicationContext(),
+                AppDatabase.class, "reminder").build();
+
         mNewReminderText = findViewById(R.id.editText_main);
       //  mReminders = new ArrayList<>();
-        mDataSource = new DataSource(this);
-        mDataSource.open();
 
         //Initialize the local variables
 
@@ -59,17 +61,6 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
 
 
         updateUI();
-/*
-
-            mListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
-
-                return true;
-            }
-        });
-
-*/
 
         FloatingActionButton fab =  findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -83,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
                 if (!(TextUtils.isEmpty(text))) {
                     //Add the text to the list (datamodel)
                     //mReminders.add(newReminder);
-                    mDataSource.createReminder(text);
+                    db.reminderDao().insertReminders(newReminder);
 //Tell the adapter that the data set has been modified: the screen will be refreshed.
                     updateUI();
 
@@ -128,12 +119,13 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
     }
 
     private void updateUI() {
-        mCursor = mDataSource.getAllReminders();
+//        mCursor = mDataSource.getAllReminders();
+
         if (mAdapter == null) {
-            mAdapter = new ReminderAdapter (this,mCursor);
+            mAdapter = new ReminderAdapter (this,db.reminderDao().getAll());;
             mRecyclerView.setAdapter(mAdapter);
         } else {
-            mAdapter.swapCursor(mCursor);
+            mAdapter.notifyDataSetChanged();
         }
     }
 
@@ -161,6 +153,11 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void reminderOnClick(int i) {
+
+    }
+
 /*
 
     @Override
@@ -180,31 +177,7 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
 */
 
 
-    protected void onResume() {
-        super.onResume();
-        mDataSource.open();
-        updateUI();
-    }
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if (mCursor != null && !mCursor.isClosed()) mCursor.close();
-        mDataSource.close();
-    }
 
 
-    @Override
-    public void reminderOnClick(long id) {
-        Intent intent = new Intent(MainActivity.this, UpdateActivity.class);
-        intent.putExtra(REMINDER_POSITION, id);
-        startActivity (intent);
-    }
-
-
-    @Override
-    public void reminderOnLongClick(long id) {
-        mDataSource.deleteReminder(id);
-        updateUI();
-    }
 
 }
