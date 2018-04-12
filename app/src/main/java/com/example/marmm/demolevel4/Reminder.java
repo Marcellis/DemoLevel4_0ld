@@ -12,7 +12,7 @@ import android.os.Parcelable;
 @Entity
 public class Reminder{
 
-    @PrimaryKey
+    @PrimaryKey (autoGenerate = true)
     private int uid;
 
     public String mReminderText;

@@ -71,5 +71,13 @@ public class ReminderAdapter extends RecyclerView.Adapter<ReminderAdapter.ViewHo
         }
     }
 
+    public void swapList (List<Reminder> newList) {
+
+        mReminders = newList;
+        if (newList != null) {
+            // Force the RecyclerView to refresh
+            this.notifyDataSetChanged();
+        }
+    }
 
 }

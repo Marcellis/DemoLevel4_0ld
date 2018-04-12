@@ -44,9 +44,9 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
         Toolbar toolbar =  findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-
+        //allowMainThreadqueries is not advised in real apps.
          db = Room.databaseBuilder(getApplicationContext(),
-                AppDatabase.class, "reminder").build();
+                AppDatabase.class, "reminder").allowMainThreadQueries().build();
 
         mNewReminderText = findViewById(R.id.editText_main);
       //  mReminders = new ArrayList<>();
@@ -119,13 +119,13 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
     }
 
     private void updateUI() {
-//        mCursor = mDataSource.getAllReminders();
 
+        List<Reminder> reminders =  db.reminderDao().getAll();
         if (mAdapter == null) {
-            mAdapter = new ReminderAdapter (this,db.reminderDao().getAll());;
+            mAdapter = new ReminderAdapter (this, reminders);
             mRecyclerView.setAdapter(mAdapter);
         } else {
-            mAdapter.notifyDataSetChanged();
+            mAdapter.swapList(reminders);
         }
     }
 
