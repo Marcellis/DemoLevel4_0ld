@@ -28,6 +28,7 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
     private ReminderAdapter mAdapter;
     private RecyclerView mRecyclerView;
     private EditText mNewReminderText;
+    private  List<Reminder> mReminders;
 
     //Database related local variables
 
@@ -44,9 +45,7 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
         Toolbar toolbar =  findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        //allowMainThreadqueries is not advised in real apps.
-         db = Room.databaseBuilder(getApplicationContext(),
-                AppDatabase.class, "reminder").allowMainThreadQueries().build();
+        db = AppDatabase.getInstance(this);
 
         mNewReminderText = findViewById(R.id.editText_main);
       //  mReminders = new ArrayList<>();
@@ -108,7 +107,9 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
                         //Get the index corresponding to the selected position
                         int position = (viewHolder.getAdapterPosition());
                  //       mReminders.remove(position);
-                        mAdapter.notifyItemRemoved(position);
+
+                       db.reminderDao().deleteReminders(mReminders.get(position));
+                        updateUI();
                     }
                 };
 
@@ -119,13 +120,12 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
     }
 
     private void updateUI() {
-
-        List<Reminder> reminders =  db.reminderDao().getAll();
+       mReminders =  db.reminderDao().getAllReminders();
         if (mAdapter == null) {
-            mAdapter = new ReminderAdapter (this, reminders);
+            mAdapter = new ReminderAdapter (this, mReminders);
             mRecyclerView.setAdapter(mAdapter);
         } else {
-            mAdapter.swapList(reminders);
+            mAdapter.swapList(mReminders);
         }
     }
 
@@ -158,23 +158,6 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
 
     }
 
-/*
-
-    @Override
-    public void reminderOnLongClick(int i) {
-        mReminders.remove(i);
-        updateUI();
-    }
-
-    @Override
-    public void reminderOnClick(int i) {
-        Intent intent = new Intent(MainActivity.this, UpdateActivity.class);
-        intent.putExtra(REMINDER_POSITION, i);
-        startActivity(intent);
-
-
-    }
-*/
 
 
 

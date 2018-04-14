@@ -11,8 +11,12 @@ import java.util.List;
     public interface ReminderDao {
 
         @Query("SELECT * FROM reminder")
-        public List<Reminder> getAll();
+        public List<Reminder> getAllReminders();
 
         @Insert
-        public void insertReminders(Reminder... reminders);
-    }
+        public void insertReminders(Reminder  reminders);
+
+        @Delete
+        public void deleteReminders(Reminder reminders);
+
+}
