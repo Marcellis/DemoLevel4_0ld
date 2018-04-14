@@ -34,9 +34,15 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
 
     AppDatabase db;
 
+
+
     //Constants used when calling the update activity
-    public static final String REMINDER_POSITION = "Position";
+    public static final String EXTRA_NUMBER = "Row number";
+    public static final String EXTRA_REMINDER = "Reminder text";
     public static final int REQUESTCODE = 1234;
+    private int mModifyPosition;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -155,11 +161,27 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
 
     @Override
     public void reminderOnClick(int i) {
-
+        Intent intent = new Intent(MainActivity.this, UpdateActivity.class);
+        mModifyPosition = i;
+        intent.putExtra(EXTRA_REMINDER,  mReminders.get(i));
+        startActivityForResult(intent, REQUESTCODE);
     }
 
 
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        if (requestCode == REQUESTCODE) {
+            if (resultCode == RESULT_OK) {
+                Reminder updatedReminder = data.getParcelableExtra(MainActivity.EXTRA_REMINDER);
+                // New timestamp: timestamp of update
+                //mReminders.set(mModifyPosition, updatedReminder);
+                db.reminderDao().updateReminders(updatedReminder);
+                updateUI();
+            }
+        }
+    }
 
 
 

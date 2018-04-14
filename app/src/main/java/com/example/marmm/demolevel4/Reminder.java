@@ -10,7 +10,7 @@ import android.os.Parcelable;
  */
 
 @Entity
-public class Reminder{
+public class Reminder implements Parcelable {
 
     @PrimaryKey (autoGenerate = true)
     private int uid;
@@ -42,4 +42,31 @@ public class Reminder{
         return mReminderText;
     }
 
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(this.uid);
+        dest.writeString(this.mReminderText);
+    }
+
+    protected Reminder(Parcel in) {
+        this.uid = in.readInt();
+        this.mReminderText = in.readString();
+    }
+
+    public static final Parcelable.Creator<Reminder> CREATOR = new Parcelable.Creator<Reminder>() {
+        @Override
+        public Reminder createFromParcel(Parcel source) {
+            return new Reminder(source);
         }
+
+        @Override
+        public Reminder[] newArray(int size) {
+            return new Reminder[size];
+        }
+    };
+}
